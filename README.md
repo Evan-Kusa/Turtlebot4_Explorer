@@ -1,93 +1,94 @@
-# Turtlebot4_autonomous_explorer
+# TurtleBot 4 Autonomous Explorer
 
+This project implements an autonomous exploration system for the TurtleBot 4, using ROS 2 for navigation and SLAM. The code enables the robot to explore unknown environments by detecting frontiers in a map, selecting the most promising frontier to explore, and navigating towards it. The goal is to cover as much of the environment as possible.
 
+## Features
 
-## Getting started
+- **Autonomous Exploration**: The robot identifies frontiers (boundaries between known and unknown areas) and navigates to the nearest one to explore new spaces.
+- **Frontier Detection**: Detects frontier cells in the occupancy grid (free space adjacent to unknown space).
+- **Frontier Grouping**: Groups frontier cells and selects the largest ones for exploration.
+- **Navigation**: Uses the TurtleBot 4 Navigator to move the robot to goal positions based on frontier detection.
+- **Real-Time Map Updates**: Subscribes to `map` and `odom` topics to receive real-time updates of the environment and the robot’s position.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## ROS 2 Topics and Messages
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+- **Subscribed Topics**:
+  - `/map` (`nav_msgs/OccupancyGrid`): Receives the occupancy grid map of the environment.
+  - `/odom` (`nav_msgs/Odometry`): Receives the robot’s odometry data for position and orientation.
 
-## Add your files
+- **Published Topics**:
+  - `/cmd_vel` (`geometry_msgs/Twist`): Sends velocity commands to the robot for movement.
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## Code Overview
 
-```
-cd existing_repo
-git remote add origin https://gitlab.oit.duke.edu/introtorobotics/turtlebot4_autonomous_explorer.git
-git branch -M main
-git push -uf origin main
-```
+### Main Components
 
-## Integrate with your tools
+- **AutonomousExplorer**: The main ROS 2 node that orchestrates the robot’s exploration. It subscribes to map and odometry topics, detects frontiers, and commands the robot to explore them.
+  
+- **Frontier Detection**: The function `detect_frontiers()` identifies frontiers in the occupancy grid by checking for unknown space adjacent to free space.
 
-- [ ] [Set up project integrations](https://gitlab.oit.duke.edu/introtorobotics/turtlebot4_autonomous_explorer/-/settings/integrations)
+- **Frontier Grouping**: Frontier cells are grouped using depth-first search (DFS) to form connected clusters. These groups are then filtered to select the largest ones for exploration.
 
-## Collaborate with your team
+- **Navigation**: The best frontier group is selected, and the robot is commanded to navigate to its centroid using the TurtleBot 4 Navigator.
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+### Parameters
 
-## Test and Deploy
+The parameters for exploration and navigation can be adjusted in the `load_parameters()` function. The key parameters include:
 
-Use the built-in continuous integration in GitLab.
+- `lookahead_distance`: The distance ahead of the robot to consider when planning.
+- `speed`: Maximum speed of the robot.
+- `expansion_size`: Factor used to expand walls in the occupancy grid for safety.
+- `target_error`: Allowable distance error when reaching a goal.
+- `robot_radius`: Radius of the robot for safety checks.
+- `tick_rate`: The rate at which the exploration loop runs.
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### Key Functions
 
-***
+- `detect_frontiers(occupancy_grid)`: Detects frontier cells in the map.
+- `assign_frontier_groups(frontier_grid)`: Groups frontier cells into clusters using DFS.
+- `filter_frontier_groups(groups)`: Filters and selects the largest frontier groups for exploration.
+- `find_best_frontier_group(groups, current_position)`: Selects the best frontier group to navigate to, based on proximity to the robot.
 
-# Editing this README
+### Launch Instructions
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+1. **Prerequisites**:
+   - ROS 2 Humble or later.
+   - TurtleBot 4.
+   - SLAM package installed and running.
 
-## Suggestions for a good README
+2. **Launching the Code**:
+   To launch the autonomous explorer, follow these steps:
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+   1. Install ROS 2 and TurtleBot 4 Navigation packages.
+   2. Run SLAM to generate a map of the environment.
+   3. Execute the script:
+      ```bash
+      python3 autonomous_explorer.py
+      ```
 
-## Name
-Choose a self-explaining name for your project.
+## Dependencies
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+- ROS 2 (Humble or later)
+- `nav_msgs` for OccupancyGrid and Odometry
+- `geometry_msgs` for PoseStamped and Twist
+- `turtlebot4_navigation` for TurtleBot4Navigator
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+## Notes
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+- This system assumes the TurtleBot 4 is undocked and ready for exploration. If the robot is docked, it will automatically undock and begin exploring.
+- Ensure the environment is set up with SLAM running for map generation.
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+## Future Improvements
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+- Add support for more complex path planning algorithms.
+- Improve the handling of dynamic obstacles.
+- Implement multi-robot exploration for larger environments.
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+This project is licensed under the BSD-3-Clause License.
+
+## Contact
+
+For questions or issues, please contact the author.
+

@@ -1,0 +1,5 @@
+lookahead_distance: 0.24  # forward look-ahead distance
+speed: 0.18               # maximum speed
+expansion_size: 3         # wall expansion factor
+target_error: 0.15        # allowable error to target
+robot_r: 0.2              # robot radius for local safety
